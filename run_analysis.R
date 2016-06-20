@@ -1,88 +1,104 @@
+setwd("C:\\DataScinceTrack\\data-cleaning\\HW\\project") 
 
+# Read and convert data
 
-install.packages("jpeg")
-dir.create("data")
-getwd()
-setwd("C:\\DataScinceTrack\\data-cleaning\\HW\\data")
-library(RCurl)
-URL <- "https://d396qusza40orc.cloudfront.ne\\getdata%2Fdata%2Fss06hid.csv"
-download.file(URL, destfile = "dd.csv", method="curl")
- d<-read.csv("dd.csv")
- str(d)
- strsplit( names(d), "wgtp")
- varNamesSplit <- strsplit(names(d), "wgtp")
- varNamesSplit[[123]]
- dim(data)
-head(data)
-str(data)
+#training data
+X_train <-  read.table (".\\data\\UCIHARDataset\\train\\X_train.txt")
+y_train <-  read.table (".\\data\\UCIHARDataset\\train\\y_train.txt")
+#test data
+X_test <- read.table (".\\data\\UCIHARDataset\\test\\X_test.txt")
+Y_test<- read.table (".\\data\\UCIHARDataset\\test\\Y_test.txt")
 
-d<-read.csv("fdg.csv")
-names(d)
-d<- data.table(read.csv("fdg.csv", skip = 4, nrows = 215, stringsAsFactors = FALSE))
-d <- d[X != ""]
+Features <- read.table(  ".\\data\\UCIHARDataset\\features.txt" ,header=FALSE, stringsAsFactors=FALSE) 
+
+Subjecttrain <- read.table(  ".\\data\\UCIHARDataset\\train\\subject_train.txt") 
+Subjecttest <- read.table(  ".\\data\\UCIHARDataset\\test\\subject_test.txt") 
+
+activity_labels <- read.table(".\\data\\UCIHARDataset\\activity_labels.txt", header=FALSE, stringsAsFactors=FALSE)
+     head(X_train,2)
+     head(X_test,2 )
+     dim(X_test)
+     str(X_train)
+     X_train[1:2,560:561]
+     dim(X_train)
+     View(X_train)
+     str(Y_test)
+     head(y_train)
+     head(Y_test)
+     str(y_train)
+     
+     head(Features)
+     dim(Features)
+     
+     dim(X_train)
+     dim(y_train)
+     
+     head(Subjecttrain,2)
+     head(Subjecttest,2)
+     
+     colnames(X_train) <- t(Features[2])
+     colnames(X_test) <- t(Features[2])
+     
+    
+   # 1. Merges the training and the test sets to create one data set.
+    ## explore the data
+     head(train,2);   head(test,2);   dim(train);   dim(X_train);   dim(train);   dim(test)
+     dim(Y_test)
+      # train and test data
+   train <- cbind(X_train,Subjecttrain,y_train)
+   test <- cbind(X_test,Subjecttest,Y_test)
+  
+   colnames(X_test)
+   
+   #merging to get data
+   data<-rbind(train,test)
+   head(data,2)
+   
+   # 2. Extracts only the measurements on the mean and standard deviation for each measurement. 
+   head(Features )
+   colnames(Features)<-c("V1","Features" )
+   
+   #Select all the columns that represent mean or standard deviation 
+   #of the measurements with grep order.
+   mean_std <- data[,grep(pattern="std|mean", x=Features, ignore.case=TRUE)]
+    
+   
+   
+   # 3. Uses descriptive activity names to name the activities in the data set
+   
+   
+   #Replacing numeric labels of activity in column 2 of the data frame (from 1 to 6) 
+   #by descriptive strings which come from the file activity_labels.txt.
+   activity_labels  
+   activity_labels <- as.character( activity_labels[,2])
+   data$activity <- activity_labels[data$activity]
+   
+   # 4. Appropriately labels the data set with descriptive activity names. 
+   head(Features   )
+   tail(Features   )
+   Features <- make.names(Features[,"Features"])
+   Features[562] = "subject"
+   Features[563] = "activity"
+   #explore
+    colnames(data) <- Features
+   length(Features)
+    head(data)
+   
+   
+   # 5. Creates a second, independent tidy data set with the average of each variable for each activity and each subject. 
+   labels <- colnames(data)[-c(562,563)]
+   data2 <- sapply(X=labels, FUN=function(x) tapply(data[[x]], list(data$activity, data$subject), mean))
+   names(data2) <- labels
+  
+    write.table(unlist( data2), file = "tidy_data.txt", row.name=FALSE ) 
+  
+   data2<- data.frame(unlist( data2) )
  
-d <- d[, list(X, X.1, X.3, X.4)]
-setnames(d, c("X", "X.1" ,"X.3", "X.4"), c("CountryCode", "rankingGDP", "Long.Name", "gdp"))
-d<- as.numeric(gsub(",", "", d$gdp ))
-mean(  d   , na.rm = TRUE)
-
-d[grepl("^United", d$Long.Name)]
-
- 
-library(quantmod)
- 
-amzn = getSymbols("AMZN",auto.assign=FALSE)
-sampleTimes = index(amzn)
-
-str(amzn)
-names(amzn)
-
-t<- table(year(sampleTimes), weekdays(sampleTimes) )
-sum( t[5,] )
-
-library(data.table)
-dt <- data.table(data)
-head(dt)
-agricultureLogical <- dt$ACR == 3 & dt$AGS == 6
-which(agricultureLogical)[1:3]
-########
-
-url <- "https://d396qusza40orc.cloudfront.net/getdata%2Fjeff.jpg"
-f <- file.path(getwd(), "jeff.jpg")
-download.file(url, f, mode = "wb")
-
-library(jpeg)
-img <- readJPEG(f, native = TRUE)
-quantile(img, probs = c(0.3, 0.8))
-
- 
- 
-GDP <- data.table(read.csv("GDP.csv", skip = 4, nrows = 191))
-GDP <- GDP[X != ""]
-GDP <- GDP[, list(X, X.1, X.3, X.4)]
-setnames(GDP, c("X", "X.1", "X.3", "X.4"), c("CountryCode", "rankingGDP", "Long.Name", "GDP"))
-
- 
-EDSTATS <- data.table(read.csv("EDSTATS_Country.csv"))
-
-data2 <- merge(GDP, EDSTATS, all = TRUE, by = c("CountryCode"))
-
-sum(!is.na(unique(data2$rankingGDP)))
-
-data2[order(rankingGDP, decreasing = TRUE), list(CountryCode, Long.Name.x, Long.Name.y, rankingGDP, GDP)][13]
-
-
-data2[, mean(rankingGDP, na.rm = TRUE), by = Income.Group]
-
-#QUESTION4
-#What is the average GDP ranking for the "High income: OECD" and "High income: nonOECD" group? 
-
-data2[, mean(rankingGDP, na.rm = TRUE), by = Income.Group]
-
-
-
-breaks <- quantile(data2$rankingGDP, probs = seq(0, 1, 0.2), na.rm = TRUE)
-data2$quantileGDP <- cut(data2$rankingGDP, breaks = breaks)
-data2[Income.Group == "Lower middle income", .N, by = c("Income.Group", "quantileGDP")]
-
-
+    head(data2,1)
+    str(data2)
+    View(data2)
+    dim(data)
+    
+   
+   
+   
